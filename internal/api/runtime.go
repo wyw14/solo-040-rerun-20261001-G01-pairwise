@@ -16,6 +16,7 @@ import (
 	"github.com/wyw14/cry-96/internal/safety"
 	"github.com/wyw14/cry-96/internal/schedule"
 	"github.com/wyw14/cry-96/internal/signal"
+	"github.com/wyw14/cry-96/internal/stowage"
 )
 
 // Runtime contains the long-lived component graph used by HTTP handlers.
@@ -30,6 +31,7 @@ type Runtime struct {
 	Signals         *signal.Service
 	AdmissionQueue  *admission.Queue
 	Admission       *admission.Service
+	Stowage         *stowage.Service
 	Planner         *schedule.Planner
 	Schedule        *schedule.Service
 	Hydraulics      *hydraulics.Controller
@@ -67,7 +69,12 @@ func NewRuntime(ctx context.Context, dataDirectory string) (*Runtime, error) {
 	leaseRegistry := lease.NewRegistry()
 	leaseService := lease.NewService(leaseRegistry, admissionController, recorder, now)
 	leaseSweeper := lease.NewSweeper(leaseRegistry, now)
-	planner := schedule.NewPlanner(admissionService, recorder, now)
+	stowageRegistry, err := stowage.NewRegistry(stowage.DefaultConfig, now)
+	if err != nil {
+		return nil, err
+	}
+	stowageService := stowage.NewService(stowageRegistry, recorder)
+	planner := schedule.NewPlanner(admissionService, stowageService, recorder, now)
 	scheduleService := schedule.NewService(planner, signalPublisher)
 	ramp := hydraulics.NewRamp(25*time.Millisecond, now)
 	hydraulicsController := hydraulics.NewController(gateCommands, recorder, ramp, now)
@@ -111,6 +118,7 @@ func NewRuntime(ctx context.Context, dataDirectory string) (*Runtime, error) {
 		GateCommands: gateCommands, Gates: gateController,
 		SignalStore: signalStore, SignalPublisher: signalPublisher, Signals: signalService,
 		AdmissionQueue: admissionController.Queue(), Admission: admissionService,
+		Stowage: stowageService,
 		Planner: planner, Schedule: scheduleService, Hydraulics: hydraulicsController,
 		Interlocks: interlockCoordinator, Cycles: cycleCoordinator, CycleService: cycleService,
 		Leases: leaseService, LeaseSweeper: leaseSweeper, Safety: safetyService,

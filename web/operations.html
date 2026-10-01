@@ -7,12 +7,20 @@
   <div class="page-title"><div><h1>Dispatch operations</h1><div class="muted">Active convoy and admission control</div></div><span class="status" id="health">Connecting</span></div>
   <div class="grid">
     <section class="panel"><h2>Create convoy plan</h2><form id="plan-form">
-      <div class="form-row"><div><label for="chamber">Chamber</label><select id="chamber"><option>chamber-1</option><option>chamber-2</option></select></div><div><label for="direction">Direction</label><select id="direction"><option value="upstream">Upstream</option><option value="downstream">Downstream</option></select></div><div><label for="length">Length (m)</label><input id="length" type="number" value="86" min="1"></div></div>
-      <div class="form-row"><div><label for="vessel">Vessel</label><input id="vessel" value="River Star"></div><div><label for="call-sign">Call sign</label><input id="call-sign" value="RS-204"></div><div><label>&nbsp;</label><button type="submit">Create and admit</button></div></div>
+      <div class="form-row"><div><label for="chamber">Chamber</label><select id="chamber"><option>chamber-1</option><option>chamber-2</option></select></div><div><label for="direction">Direction</label><select id="direction"><option value="upstream">Upstream</option><option value="downstream">Downstream</option></select></div><div><label>&nbsp;</label><button type="button" id="add-vessel">Add vessel</button></div></div>
+      <div id="vessels"></div>
+      <div class="hint" id="stowage-preview"></div>
+      <div style="margin-top:12px"><button type="submit">Create and admit</button></div>
       <div class="message" id="plan-message"></div>
     </form></section>
     <section class="panel"><h2>Current transit</h2><div class="metrics"><div class="metric">Chamber<strong id="metric-chamber">-</strong></div><div class="metric">Stage<strong id="metric-stage">-</strong></div><div class="metric">Cycle<strong id="metric-cycle">-</strong></div></div></section>
-    <section class="panel wide"><h2>Active plans</h2><table><thead><tr><th>Chamber</th><th>Plan</th><th>Direction</th><th>Vessels</th><th>Created</th></tr></thead><tbody id="plans"></tbody></table></section>
+    <section class="panel"><h2>Chamber stowage</h2><div class="muted" id="stowage-chamber-label">-</div>
+      <div class="metrics" style="margin-top:10px"><div class="metric">Effective length<strong id="stowage-effective">-</strong></div><div class="metric">Safety spacing<strong id="stowage-spacing">-</strong></div><div class="metric">Next group<strong id="stowage-next">-</strong></div></div>
+      <form id="stowage-form"><div class="form-row" style="margin-top:12px"><div><label for="cfg-effective">Effective length (m)</label><input id="cfg-effective" type="number" min="1" step="0.5" required></div><div><label for="cfg-spacing">Safety spacing (m)</label><input id="cfg-spacing" type="number" min="0" step="0.5" required></div><div><label>&nbsp;</label><button type="submit">Save stowage</button></div></div></form>
+      <div class="message" id="stowage-message"></div>
+    </section>
+    <section class="panel"><h2>Queued for next lockage</h2><table><thead><tr><th>Vessel</th><th>Call sign</th><th>Length</th><th>Occupancy</th></tr></thead><tbody id="next-group"></tbody></table></section>
+    <section class="panel wide"><h2>Active plans</h2><table><thead><tr><th>Chamber</th><th>Plan</th><th>Direction</th><th>Vessels</th><th>Stowage</th><th>Created</th></tr></thead><tbody id="plans"></tbody></table></section>
   </div>
 </main><script src="/assets/app.js"></script><script src="/assets/operations.js"></script>
 </body></html>

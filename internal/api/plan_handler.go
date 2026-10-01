@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/wyw14/cry-96/internal/model"
 	"github.com/wyw14/cry-96/internal/signal"
+	"github.com/wyw14/cry-96/internal/stowage"
 )
 
 type vesselInput struct {
@@ -29,17 +30,20 @@ func createPlanHandler(runtime *Runtime) http.HandlerFunc {
 			writeError(w, http.StatusBadRequest, err)
 			return
 		}
-		vessels := make([]model.Vessel, 0, len(input.Vessels))
-		for _, item := range input.Vessels {
-			vessel, err := model.NewVessel(item.Name, item.CallSign, item.LengthM)
-			if err != nil {
-				writeError(w, http.StatusBadRequest, err)
-				return
-			}
-			vessels = append(vessels, vessel)
+		vessels, err := buildVessels(input.Vessels)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, err)
+			return
 		}
 		plan, err := runtime.Schedule.Create(r.Context(), input.ChamberID, input.Direction, vessels)
 		if err != nil {
+			var overflow *stowage.Overflow
+			if errors.As(err, &overflow) {
+				writeJSON(w, http.StatusConflict, map[string]any{
+					"error": err.Error(), "overflow": overflow,
+				})
+				return
+			}
 			writeError(w, http.StatusConflict, err)
 			return
 		}
@@ -48,7 +52,9 @@ func createPlanHandler(runtime *Runtime) http.HandlerFunc {
 			writeError(w, http.StatusConflict, err)
 			return
 		}
-		writeJSON(w, http.StatusCreated, map[string]any{"plan": plan, "cycle": cycleValue})
+		writeJSON(w, http.StatusCreated, map[string]any{
+			"plan": plan, "cycle": cycleValue, "stowage": planStowageSummary(runtime, plan),
+		})
 	}
 }
 

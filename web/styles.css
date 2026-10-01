@@ -53,9 +53,16 @@ th { color: #91a0a8; font-weight: 600; }
 .status.warning::before { background: #f2c14e; }
 .status.critical::before { background: #ef6f6c; }
 .message { min-height: 22px; color: #f2c14e; font-size: 13px; margin-top: 10px; white-space: pre-wrap; }
+.vessel-row { display: grid; grid-template-columns: 2fr 1.2fr 1fr auto; gap: 10px; margin-bottom: 10px; align-items: end; }
+.vessel-row button { min-width: 40px; padding: 8px 10px; }
+.hint { min-height: 18px; font-size: 13px; margin-top: 2px; }
+.hint.ok { color: #5bc0be; }
+.hint.warn { color: #f2c14e; }
+.hint.bad { color: #ef6f6c; }
 @media (max-width: 780px) {
   header { height: auto; padding: 14px 18px; align-items: flex-start; flex-direction: column; gap: 10px; }
   main { padding: 20px 16px 40px; }
   .panel, .panel.third { grid-column: span 12; }
   .form-row, .metrics { grid-template-columns: 1fr; }
+  .vessel-row { grid-template-columns: 1fr; }
 }

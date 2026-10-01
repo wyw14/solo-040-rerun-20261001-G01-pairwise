@@ -11,6 +11,7 @@ import (
 	"github.com/wyw14/cry-96/internal/admission"
 	"github.com/wyw14/cry-96/internal/journal"
 	"github.com/wyw14/cry-96/internal/model"
+	"github.com/wyw14/cry-96/internal/stowage"
 )
 
 // Planner owns convoy plans and their admission queue membership.
@@ -18,21 +19,27 @@ type Planner struct {
 	mu        sync.RWMutex
 	plans     map[uuid.UUID]model.ConvoyPlan
 	admission *admission.Service
+	stowage   *stowage.Service
 	recorder  *journal.Recorder
 	now       func() time.Time
 }
 
-func NewPlanner(admissionService *admission.Service, recorder *journal.Recorder, now func() time.Time) *Planner {
+func NewPlanner(admissionService *admission.Service, stowageService *stowage.Service, recorder *journal.Recorder, now func() time.Time) *Planner {
 	if now == nil {
 		now = time.Now
 	}
 	return &Planner{
 		plans: make(map[uuid.UUID]model.ConvoyPlan), admission: admissionService,
-		recorder: recorder, now: now,
+		stowage: stowageService, recorder: recorder, now: now,
 	}
 }
 
 func (p *Planner) Create(ctx context.Context, chamberID string, direction model.Direction, vessels []model.Vessel) (model.ConvoyPlan, error) {
+	if p.stowage != nil {
+		if err := p.stowage.Check(chamberID, vessels); err != nil {
+			return model.ConvoyPlan{}, err
+		}
+	}
 	plan, err := model.NewConvoyPlan(chamberID, direction, vessels, p.now())
 	if err != nil {
 		return model.ConvoyPlan{}, err
